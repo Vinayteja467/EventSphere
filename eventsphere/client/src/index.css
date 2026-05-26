@@ -1,0 +1,158 @@
+@import './styles/premiumFocus.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-surface: rgba(255, 255, 255, 0.04);
+  --accent: #6366f1;
+  --accent-2: #22d3ee;
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: rgba(255, 255, 255, 0.08);
+  --radius: 12px;
+  
+  /* Space Tokens */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+}
+
+:root.light {
+  --bg-primary: #f8fafc;
+  --bg-surface: rgba(15, 23, 42, 0.03);
+  --accent: #4f46e5;
+  --accent-2: #06b6d4;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border: rgba(15, 23, 42, 0.08);
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Typography Scale */
+  h1 {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  
+  h2 {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+  
+  h3 {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  p, span, div, button, input {
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .caption {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: var(--bg-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.glass-modal {
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.light .glass-modal {
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.glowing-border {
+  position: relative;
+}
+
+.glowing-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: var(--radius);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glowing-border:hover::after {
+  opacity: 1;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Background Cyber Grid Pattern */
+.bg-grid-cyber {
+  background-image: 
+    linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.light .bg-grid-cyber {
+  background-image: 
+    linear-gradient(rgba(79, 70, 229, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, 0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+}

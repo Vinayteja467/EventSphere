@@ -1,0 +1,123 @@
+.premium-focus {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 16px 24px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease,
+    border-color 0.4s ease,
+    background 0.3s ease;
+}
+
+.premium-focus::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.premium-focus:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(139, 92, 246, 0.7);
+  background: rgba(139, 92, 246, 0.07);
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.25),
+    0 0 40px rgba(139, 92, 246, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.premium-focus:hover::before { opacity: 1; }
+
+.premium-focus:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.09);
+  box-shadow:
+    0 0 0 4px rgba(139, 92, 246, 0.2),
+    0 0 30px rgba(139, 92, 246, 0.35);
+  transform: scale(1.02);
+}
+
+.premium-focus:focus::before { opacity: 1; }
+
+.premium-focus:active {
+  transform: scale(0.99) translateY(-2px);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow:
+    0 0 0 4px rgba(139, 92, 246, 0.15),
+    0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+/* Role-specific glow variants */
+.premium-focus.glow-organizer:hover,
+.premium-focus.glow-organizer:focus {
+  border-color: rgba(99, 102, 241, 0.75);
+  background: rgba(99, 102, 241, 0.07);
+  box-shadow: 0 0 20px rgba(99,102,241,0.3), 0 0 40px rgba(99,102,241,0.15), 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.premium-focus.glow-participant:hover,
+.premium-focus.glow-participant:focus {
+  border-color: rgba(34, 211, 238, 0.7);
+  background: rgba(34, 211, 238, 0.06);
+  box-shadow: 0 0 20px rgba(34,211,238,0.25), 0 0 40px rgba(34,211,238,0.12), 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.premium-focus.glow-volunteer:hover,
+.premium-focus.glow-volunteer:focus {
+  border-color: rgba(16, 185, 129, 0.7);
+  background: rgba(16, 185, 129, 0.06);
+  box-shadow: 0 0 20px rgba(16,185,129,0.25), 0 0 40px rgba(16,185,129,0.12), 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.premium-focus.glow-sponsor:hover,
+.premium-focus.glow-sponsor:focus {
+  border-color: rgba(245, 158, 11, 0.7);
+  background: rgba(245, 158, 11, 0.05);
+  box-shadow: 0 0 20px rgba(245,158,11,0.22), 0 0 40px rgba(245,158,11,0.1), 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.premium-focus.glow-ai:hover,
+.premium-focus.glow-ai:focus {
+  border-color: rgba(236, 72, 153, 0.7);
+  background: rgba(236, 72, 153, 0.05);
+  box-shadow: 0 0 20px rgba(236,72,153,0.22), 0 0 40px rgba(236,72,153,0.1), 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.premium-focus.glow-danger:hover,
+.premium-focus.glow-danger:focus {
+  border-color: rgba(239, 68, 68, 0.7);
+  background: rgba(239, 68, 68, 0.05);
+  box-shadow: 0 0 20px rgba(239,68,68,0.22), 0 0 40px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.4);
+}
+
+/* Component-specific padding overrides */
+.stat-card.premium-focus    { border-radius: 14px; padding: 14px 16px; }
+.event-card.premium-focus   { border-radius: 16px; padding: 0; }
+.event-card.premium-focus .event-card-body { padding: 14px 16px; }
+.sponsor-card.premium-focus { border-radius: 16px; padding: 16px 18px; }
+.task-card.premium-focus    { border-radius: 12px; padding: 12px 14px; }
+.notif-card.premium-focus   { border-radius: 12px; padding: 12px 14px; }
+.feature-card.premium-focus { border-radius: 20px; padding: 20px; }
+.chart-card.premium-focus   { border-radius: 16px; padding: 18px 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-focus,
+  .premium-focus::before {
+    transition: border-color 0.2s ease, background 0.2s ease;
+    will-change: auto;
+  }
+  .premium-focus:hover,
+  .premium-focus:focus,
+  .premium-focus:active { transform: none; }
+}
