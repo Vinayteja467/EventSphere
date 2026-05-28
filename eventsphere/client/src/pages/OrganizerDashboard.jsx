@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
+  FileBadge2,
   Award,
   Sparkles,
   Percent,
@@ -27,6 +29,7 @@ import { PremiumCard } from '../components/common/PremiumCard.jsx';
 import { AnalyticsChart } from '../components/AnalyticsChart.jsx';
 import { Button } from '../components/Button.jsx';
 import { Modal } from '../components/Modal.jsx';
+import { ManageEventModal } from './Organizer/ManageEvent.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { Skeleton } from '../components/Skeleton.jsx';
 import { useToast } from '../hooks/useToast.js';
@@ -35,10 +38,13 @@ import API from '../api/api.js';
 
 export const OrganizerDashboard = () => {
   const toast = useToast();
+  const navigate = useNavigate();
   
   // States
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEventForComplete, setSelectedEventForComplete] = useState(null);
+  const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({
     totalRegistrations: 0,
     activeVolunteers: 0,
@@ -81,6 +87,16 @@ export const OrganizerDashboard = () => {
     body: '',
     type: 'update'
   });
+
+  const handleMarkCompleteClick = (event) => {
+    setSelectedEventForComplete(event);
+    setCompleteModalOpen(true);
+  };
+
+  const handleEventCompleted = (eventId) => {
+    setEvents(events.map(e => e._id === eventId ? { ...e, status: 'completed' } : e));
+    fetchData(); // Sync states
+  };
 
   // Fetch initial data
   const fetchData = async () => {
@@ -451,6 +467,37 @@ export const OrganizerDashboard = () => {
                       >
                         <BarChart3 className="w-4 h-4" />
                       </button>
+
+                      {evt.status === 'ongoing' && (
+                        <button
+                          onClick={() => handleMarkCompleteClick(evt)}
+                          className="p-1.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors animate-pulse"
+                          title="Mark as Completed"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {evt.status === 'completed' && (
+                        <button
+                          onClick={() => navigate(`/dashboard/organizer/events/${evt._id}/certificates`)}
+                          className="p-1.5 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                          title="Manage Certificates"
+                        >
+                          <FileBadge2 className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {evt.status !== 'completed' && evt.status !== 'ongoing' && (
+                        <button
+                          className="p-1.5 rounded bg-slate-800 text-slate-600 cursor-not-allowed"
+                          title="Complete the event first"
+                          disabled
+                        >
+                          <FileBadge2 className="w-4 h-4" />
+                        </button>
+                      )}
+
                       <button
                         onClick={() => handleDeleteEvent(evt._id)}
                         className="p-1.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
@@ -830,6 +877,13 @@ export const OrganizerDashboard = () => {
           <div className="text-center text-slate-400 py-6">No records found.</div>
         )}
       </Modal>
+
+      <ManageEventModal
+        isOpen={completeModalOpen}
+        onClose={() => setCompleteModalOpen(false)}
+        event={selectedEventForComplete}
+        onCompleted={handleEventCompleted}
+      />
 
     </div>
   );

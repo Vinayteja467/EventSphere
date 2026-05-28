@@ -28,6 +28,10 @@ const registrationSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  isManualOverride: {
+    type: Boolean,
+    default: false
+  },
   registeredAt: {
     type: Date,
     default: Date.now

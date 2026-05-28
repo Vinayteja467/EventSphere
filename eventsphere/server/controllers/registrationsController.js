@@ -130,12 +130,20 @@ export const markAttendance = async (req, res, next) => {
 
     const registration = await Registration.findById(registrationId)
       .populate('userId', 'name email')
-      .populate('eventId', 'title');
+      .populate('eventId', 'title completedAt status');
 
     if (!registration) {
       return res.status(404).json({
         success: false,
         message: 'Registration record not found'
+      });
+    }
+
+    // Rule 2: Lock QR check-in when event is marked complete
+    if (registration.eventId && (registration.eventId.completedAt || registration.eventId.status === 'completed')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Attendance check-in is locked. The event has been marked as completed.'
       });
     }
 

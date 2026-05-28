@@ -19,6 +19,8 @@ import { SponsorDashboard } from './pages/SponsorDashboard.jsx';
 import { AdminDashboard } from './pages/AdminDashboard.jsx';
 import { Profile } from './pages/Profile.jsx';
 import { NotificationCenter } from './pages/NotificationCenter.jsx';
+import { Verify } from './pages/Verify.jsx';
+import { OrganizerCertificates } from './pages/Organizer/Certificates.jsx';
 
 // Components
 import { Sidebar } from './components/Sidebar.jsx';
@@ -74,6 +76,7 @@ export const AppContent = () => {
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/verify/:certificateId" element={<Verify />} />
 
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<PrivateRoute />}>
@@ -84,6 +87,7 @@ export const AppContent = () => {
             <Route path="organizer/events" element={<DashboardLayout><OrganizerDashboard /></DashboardLayout>} />
             <Route path="organizer/sponsor-match" element={<DashboardLayout><OrganizerDashboard /></DashboardLayout>} />
             <Route path="organizer/announcements" element={<DashboardLayout><OrganizerDashboard /></DashboardLayout>} />
+            <Route path="organizer/events/:eventId/certificates" element={<DashboardLayout><OrganizerCertificates /></DashboardLayout>} />
           </Route>
 
           {/* Participant routes */}

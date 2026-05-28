@@ -21,6 +21,7 @@ import volunteerRoutes from './routes/volunteerRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import certificateRoutes from './routes/certificates.js';
 
 // Import individual controller handlers for distinct paths
 import { getAnalytics } from './controllers/eventsController.js';
@@ -66,10 +67,10 @@ app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // Distinct/Separate mounts required by specifications
 app.get('/api/analytics/:eventId', protect, getAnalytics);
-app.get('/api/certificates/:registrationId', protect, getCertificate);
 
 // Basic verification endpoint
 app.get('/', (req, res) => {

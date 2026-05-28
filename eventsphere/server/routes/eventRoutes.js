@@ -1,5 +1,5 @@
 import express from 'express';
-import { getEvents, createEvent, updateEvent, deleteEvent } from '../controllers/eventsController.js';
+import { getEvents, createEvent, updateEvent, deleteEvent, completeEvent } from '../controllers/eventsController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 
@@ -12,5 +12,7 @@ router.route('/')
 router.route('/:id')
   .put(protect, authorizeRoles('organizer', 'admin'), updateEvent)
   .delete(protect, authorizeRoles('organizer', 'admin'), deleteEvent);
+
+router.patch('/:id/complete', protect, authorizeRoles('organizer', 'admin'), completeEvent);
 
 export default router;

@@ -75,6 +75,19 @@ const eventSchema = new mongoose.Schema({
     enum: ['draft', 'published', 'ongoing', 'completed'],
     default: 'draft'
   },
+  completedAt: {
+    type: Date
+  },
+  certificateSettings: {
+    autoGenerate: { type: Boolean, default: true },
+    minAttendancePercent: { type: Number, default: 70 },
+    requireQRCheckin: { type: Boolean, default: true },
+    allowManualOverride: { type: Boolean, default: true },
+    notifyOnReady: { type: Boolean, default: true },
+    organizerSignatureName: { type: String, default: '' },
+    organizerSignatureRole: { type: String, default: 'Event Director' },
+    validityPeriod: { type: String, default: 'Lifetime' }
+  },
   tags: {
     type: [String],
     default: []
