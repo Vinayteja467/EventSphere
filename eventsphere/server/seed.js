@@ -12,9 +12,17 @@ import Event from './models/Event.js';
 import Sponsor from './models/Sponsor.js';
 import Registration from './models/Registration.js';
 import Announcement from './models/Announcement.js';
+import Certificate from './models/Certificate.js';
 
 // Utilities
 import { generateQRCodeDataURL } from './utils/generateQR.js';
+import { generateCertificatePDF } from './utils/generateCertificate.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -30,6 +38,7 @@ const seedDatabase = async () => {
     await Sponsor.deleteMany({});
     await Registration.deleteMany({});
     await Announcement.deleteMany({});
+    await Certificate.deleteMany({});
     console.log('Existing database sheets wiped clean.');
 
     // 3. Hash a default password
@@ -267,17 +276,48 @@ const seedDatabase = async () => {
         ],
         status: 'published',
         tags: ['LLM', 'AI', 'Seminar']
+      },
+      {
+        title: 'Vite Layout & Glassmorphism Summit 2026',
+        description: 'An advanced symposium exploring backdrop blur configurations, harmonized HSL tailoring gradients, and custom utility stylesheets inside modern Vite React client architectures.',
+        bannerImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=60',
+        venue: 'Engineering Block Auditorium B, Hall 3',
+        startDate: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        endDate: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
+        category: 'Cultural',
+        capacity: 100,
+        organizer: alexOrganizer._id,
+        volunteers: [volunteerMarcus._id],
+        participants: [participantJane._id, participantKofi._id],
+        sponsors: [vercelSponsor._id],
+        schedule: [
+          { time: '10:00 AM', title: 'Aesthetic Styling Basics', speaker: 'Elena Rostova' },
+          { time: '11:30 AM', title: 'Glowing Glassmorphism Panels', speaker: 'Alex Rivera' }
+        ],
+        status: 'completed',
+        completedAt: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
+        certificateSettings: {
+          autoGenerate: true,
+          minAttendancePercent: 50,
+          requireQRCheckin: true,
+          allowManualOverride: true,
+          notifyOnReady: true,
+          organizerSignatureName: 'Alex Rivera',
+          organizerSignatureRole: 'Event Director',
+          validityPeriod: 'Lifetime'
+        },
+        tags: ['Vite', 'CSS', 'Glassmorphism']
       }
     ]);
 
-    console.log('3 Core Events created.');
+    console.log('4 Core Events created (1 Completed).');
 
     const hackfestEvent = events[0];
     const reactWorkshopEvent = events[1];
     const aiSeminarEvent = events[2];
+    const viteSummitEvent = events[3];
 
-    // 7. Populate 8 registrations (bridging participants to events)
-    // We will generate actual QR codes mapping their IDs
+    // 7. Populate registrations (bridging participants to events)
     const registrationList = [
       // HackFest (4 participants)
       { userId: participantJane._id, eventId: hackfestEvent._id, attendanceStatus: true, checkedInAt: new Date(date1) },
@@ -289,7 +329,10 @@ const seedDatabase = async () => {
       { userId: participantLi._id, eventId: reactWorkshopEvent._id, attendanceStatus: false },
       // AI Seminar (2 participants)
       { userId: participantJohn._id, eventId: aiSeminarEvent._id, attendanceStatus: true, checkedInAt: new Date(date3) },
-      { userId: participantKofi._id, eventId: aiSeminarEvent._id, attendanceStatus: false }
+      { userId: participantKofi._id, eventId: aiSeminarEvent._id, attendanceStatus: false },
+      // Vite Summit Completed (2 participants, both checked in)
+      { userId: participantJane._id, eventId: viteSummitEvent._id, attendanceStatus: true, checkedInAt: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000) },
+      { userId: participantKofi._id, eventId: viteSummitEvent._id, attendanceStatus: true, checkedInAt: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000) }
     ];
 
     for (const reg of registrationList) {
@@ -298,9 +341,59 @@ const seedDatabase = async () => {
       const qrCodeDataUrl = await generateQRCodeDataURL(dbReg._id.toString());
       dbReg.qrCode = qrCodeDataUrl;
       await dbReg.save();
+
+      // If registration is for the pre-completed event, auto-create certificate!
+      if (reg.eventId.toString() === viteSummitEvent._id.toString()) {
+        const userObj = users.find(u => u._id.toString() === reg.userId.toString());
+        const name = userObj ? userObj.name : 'Jane Doe';
+
+        const cert = await Certificate.create({
+          userId: reg.userId,
+          eventId: viteSummitEvent._id,
+          registrationId: dbReg._id,
+          type: 'participant',
+          issuedBy: alexOrganizer._id,
+          status: 'generated'
+        });
+
+        cert.verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify/${cert.certificateId}`;
+
+        // Directory mapping
+        const storageDir = path.join(__dirname, 'storage', 'certificates');
+        if (!fs.existsSync(storageDir)) {
+          fs.mkdirSync(storageDir, { recursive: true });
+        }
+
+        const sanitizedEvent = viteSummitEvent.title.replace(/[^a-zA-Z0-9]/g, '_');
+        const sanitizedParticipant = name.replace(/[^a-zA-Z0-9]/g, '_');
+        const filename = `${sanitizedEvent}_${sanitizedParticipant}_Certificate.pdf`;
+        const pdfFilePath = path.join(storageDir, filename);
+
+        const pdfBuffer = await generateCertificatePDF({
+          participantName: name,
+          eventName: viteSummitEvent.title,
+          eventDate: new Date(viteSummitEvent.startDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          eventVenue: viteSummitEvent.venue,
+          organizerName: 'Alex Rivera',
+          organizerRole: 'Event Director',
+          certificateId: cert.certificateId,
+          type: 'participant'
+        });
+
+        fs.writeFileSync(pdfFilePath, pdfBuffer);
+        cert.pdfPath = `/storage/certificates/${filename}`;
+        await cert.save();
+
+        dbReg.certificateUrl = cert.verifyUrl;
+        await dbReg.save();
+      }
     }
 
-    console.log('8 Registrations populated with QR Data Passes.');
+    console.log('Registrations populated, pre-completed certificates generated successfully.');
 
     // 8. Create 3 Announcements
     await Announcement.create([
