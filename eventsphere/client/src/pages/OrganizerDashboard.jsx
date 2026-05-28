@@ -168,13 +168,25 @@ export const OrganizerDashboard = () => {
     }
   };
 
-  // Toggle publish state in table
+  // Toggle publish state in table (cycles: draft -> published -> ongoing, and completes or manages certificates)
   const handleTogglePublish = async (event) => {
-    const newStatus = event.status === 'published' ? 'draft' : 'published';
+    let newStatus = 'published';
+    if (event.status === 'draft') {
+      newStatus = 'published';
+    } else if (event.status === 'published') {
+      newStatus = 'ongoing';
+    } else if (event.status === 'ongoing') {
+      handleMarkCompleteClick(event);
+      return;
+    } else if (event.status === 'completed') {
+      navigate(`/dashboard/organizer/events/${event._id}/certificates`);
+      return;
+    }
+
     try {
       const res = await API.put(`/events/${event._id}`, { status: newStatus });
       if (res.data.success) {
-        toast.success(`Event successfully saved as ${newStatus}!`);
+        toast.success(`Event status updated to ${newStatus}!`);
         setEvents(events.map(e => e._id === event._id ? { ...e, status: newStatus } : e));
       }
     } catch (err) {
@@ -452,9 +464,13 @@ export const OrganizerDashboard = () => {
                         className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors ${
                           evt.status === 'published'
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+                            : evt.status === 'ongoing'
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+                            : evt.status === 'completed'
+                            ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20'
+                            : 'bg-slate-800 text-slate-400 border-white/5 hover:bg-white/5'
                         }`}
-                        title="Click to toggle publish status"
+                        title="Click to advance event lifecycle"
                       >
                         {evt.status}
                       </button>
