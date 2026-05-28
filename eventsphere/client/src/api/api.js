@@ -1,8 +1,12 @@
 import axios from 'axios';
 
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 const API = axios.create({
-  baseURL: 'https://eventsphere-backend-auur.onrender.com/api',
-  timeout: 10000,
+  baseURL: isLocalhost 
+    ? 'http://localhost:5000/api' 
+    : 'https://eventsphere-backend-auur.onrender.com/api',
+  timeout: 15000,
 });
 
 // Request interceptor to automatically attach authorization header

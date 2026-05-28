@@ -100,7 +100,11 @@ export const SocketProvider = ({ children }) => {
     }
 
     // Initialize socket connection to backend
-    const socketUrl = 'https://eventsphere-backend-auur.onrender.com';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const socketUrl = isLocalhost 
+      ? 'http://localhost:5000' 
+      : 'https://eventsphere-backend-auur.onrender.com';
+      
     const newSocket = io(socketUrl, {
       withCredentials: true,
       transports: ['websocket', 'polling']
