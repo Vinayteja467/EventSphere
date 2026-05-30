@@ -22,7 +22,10 @@ import {
   MapPin,
   Clock,
   Sparkle,
-  BarChart3
+  BarChart3,
+  Handshake,
+  Check,
+  X
 } from 'lucide-react';
 import { StatCard } from '../components/StatCard.jsx';
 import { PremiumCard } from '../components/common/PremiumCard.jsx';
@@ -43,6 +46,10 @@ export const OrganizerDashboard = () => {
   // States
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('events'); // 'events', 'proposals'
+  const [proposals, setProposals] = useState([]);
+  const [proposalsLoading, setProposalsLoading] = useState(false);
+
   const [selectedEventForComplete, setSelectedEventForComplete] = useState(null);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({
@@ -107,11 +114,46 @@ export const OrganizerDashboard = () => {
         setEvents(res.data.data);
         calculateStats(res.data.data);
       }
+
+      // Pre-fetch proposals count for real-time notification badge
+      const propRes = await API.get('/sponsorships/organizer');
+      if (propRes.data.success) {
+        setProposals(propRes.data.data);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to retrieve events catalog.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProposals = async () => {
+    setProposalsLoading(true);
+    try {
+      const res = await API.get('/sponsorships/organizer');
+      if (res.data.success) {
+        setProposals(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load incoming sponsorship offers.');
+    } finally {
+      setProposalsLoading(false);
+    }
+  };
+
+  const handleUpdateProposalStatus = async (proposalId, status) => {
+    try {
+      const res = await API.patch(`/sponsorships/${proposalId}/status`, { status });
+      if (res.data.success) {
+        toast.success(`Proposal successfully ${status === 'accepted' ? 'accepted' : 'declined'}!`);
+        fetchProposals();
+        fetchData(); // Sync updated stats (like sponsors count)
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to update proposal status.');
     }
   };
 
@@ -329,7 +371,7 @@ export const OrganizerDashboard = () => {
     <div className="flex flex-col gap-6 w-full text-left">
       
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-white/5 pb-4">
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight uppercase flex items-center gap-2">
             <Layers className="w-8 h-8 text-indigo-400" />
@@ -351,7 +393,38 @@ export const OrganizerDashboard = () => {
         </div>
       </div>
 
+      {/* Tab Selectors */}
+      <div className="flex bg-slate-900/60 p-1.5 rounded-xl border border-white/5 w-fit -mt-2">
+        <button
+          onClick={() => setActiveTab('events')}
+          className={`py-2 px-5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            activeTab === 'events' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          Event Operations Catalog
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('proposals');
+            fetchProposals();
+          }}
+          className={`py-2 px-5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+            activeTab === 'proposals' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Handshake className="w-3.5 h-3.5" />
+          Sponsorship Proposals
+          {proposals.filter(p => p.status === 'pending').length > 0 && (
+            <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-bounce ml-1">
+              {proposals.filter(p => p.status === 'pending').length}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* 1. Stat cards */}
+      {activeTab === 'events' && (
+        <>
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -529,6 +602,144 @@ export const OrganizerDashboard = () => {
           </div>
         )}
       </div>
+      </>
+      )}
+
+      {/* 4. Sponsorship Proposals tab */}
+      {activeTab === 'proposals' && (
+        <div className="flex flex-col gap-6">
+          <div className="glass-panel overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
+                Sponsorship Proposal Inbox
+              </h3>
+              <span className="caption">{proposals.length} proposals total</span>
+            </div>
+
+            {proposalsLoading ? (
+              <div className="p-8">
+                <Skeleton variant="table" />
+              </div>
+            ) : proposals.length === 0 ? (
+              <EmptyState
+                type="inbox"
+                title="No proposals received yet"
+                description="Your events have not received any corporate sponsorship pitches yet. Share your events or run AI matching to attract corporate sponsors!"
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5">
+                {proposals.map((offer) => {
+                  const sponsor = offer.sponsorId;
+                  const eventItem = offer.eventId;
+                  if (!sponsor || !eventItem) return null;
+                  
+                  const isPending = offer.status === 'pending';
+                  const isAccepted = offer.status === 'accepted';
+                  const isRejected = offer.status === 'rejected';
+
+                  return (
+                    <PremiumCard
+                      as={motion.div}
+                      glow="sponsor"
+                      key={offer._id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-5 flex flex-col gap-4 overflow-hidden border-white/5 relative"
+                    >
+                      {/* Top banner info */}
+                      <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={sponsor.logo || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(sponsor.companyName)}`}
+                            alt={sponsor.companyName}
+                            className="w-12 h-12 rounded-xl object-cover border border-white/10 p-0.5 bg-slate-900"
+                          />
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-100">{sponsor.companyName}</h4>
+                            <span className="inline-flex text-[9px] text-indigo-400 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10 mt-1 uppercase font-semibold">
+                              {sponsor.industry}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status Label */}
+                        <span className={`px-2.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider border ${
+                          isAccepted 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : isRejected 
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {offer.status}
+                        </span>
+                      </div>
+
+                      {/* Offer details */}
+                      <div className="flex flex-col gap-2.5 text-xs text-slate-300">
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold">Targeting Event:</span>
+                          <p className="text-xs font-bold text-slate-200 mt-0.5">{eventItem.title}</p>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <div>
+                            <span className="text-[10px] text-slate-500 uppercase font-semibold">Proposed Budget:</span>
+                            <p className="text-sm font-extrabold text-emerald-400 mt-0.5">₹{offer.budget.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-500 uppercase font-semibold">Submitted:</span>
+                            <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                              {new Date(offer.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold">Pitch Message:</span>
+                          <p className="text-xs text-slate-400 italic bg-white/2 p-3 rounded-lg border border-white/5 mt-1 leading-relaxed">
+                            "{offer.message}"
+                          </p>
+                        </div>
+
+                        {offer.perksRequested && offer.perksRequested.length > 0 && (
+                          <div>
+                            <span className="text-[10px] text-slate-500 uppercase font-semibold">Requested Perks:</span>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {offer.perksRequested.map((p, idx) => (
+                                <span key={idx} className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[8px] px-2 py-0.5 rounded">
+                                  {p}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Active Actions */}
+                      {isPending && (
+                        <div className="flex gap-2 border-t border-white/5 pt-4 w-full">
+                          <button
+                            onClick={() => handleUpdateProposalStatus(offer._id, 'accepted')}
+                            className="flex-grow py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md flex items-center justify-center gap-1 active:scale-95 transition-all duration-200"
+                          >
+                            <Check className="w-3.5 h-3.5" /> Accept Offer
+                          </button>
+                          <button
+                            onClick={() => handleUpdateProposalStatus(offer._id, 'rejected')}
+                            className="px-4 py-2 rounded-lg text-xs font-bold bg-white/5 border border-white/5 text-rose-400 hover:bg-rose-500/10 transition-colors flex items-center justify-center gap-1 active:scale-95"
+                          >
+                            <X className="w-3.5 h-3.5" /> Decline
+                          </button>
+                        </div>
+                      )}
+                    </PremiumCard>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* --- WIZARDS & MODALS --- */}
 

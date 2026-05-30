@@ -22,6 +22,7 @@ import aiRoutes from './routes/aiRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import certificateRoutes from './routes/certificates.js';
+import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
 
 // Import individual controller handlers for distinct paths
 import { getAnalytics } from './controllers/eventsController.js';
@@ -68,6 +69,8 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/sponsorships', sponsorshipRoutes);
+app.use('/api/sponsor', sponsorshipRoutes);
 
 // Distinct/Separate mounts required by specifications
 app.get('/api/analytics/:eventId', protect, getAnalytics);
