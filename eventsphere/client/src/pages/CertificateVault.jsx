@@ -69,8 +69,8 @@ export const CertificateVault = () => {
       eventName: cert.eventId?.title,
       eventDate: new Date(cert.eventId?.startDate).toLocaleDateString(),
       eventVenue: cert.eventId?.venue,
-      organizerName: 'Event Director',
-      organizerRole: 'EventSphere Director',
+      organizerName: cert.eventId?.certificateSettings?.organizerSignatureName || 'Event Director',
+      organizerRole: cert.eventId?.certificateSettings?.organizerSignatureRole || 'Event Director',
       certificateId: cert.certificateId,
       type: cert.type,
       position: cert.position

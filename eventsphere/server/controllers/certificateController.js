@@ -356,7 +356,7 @@ export const getEventCertificates = async (req, res, next) => {
 export const getMyCertificates = async (req, res, next) => {
   try {
     const certificates = await Certificate.find({ userId: req.user._id })
-      .populate('eventId', 'title venue startDate endDate category');
+      .populate('eventId', 'title venue startDate endDate category certificateSettings');
 
     res.json({
       success: true,
@@ -403,14 +403,7 @@ export const downloadPDF = async (req, res, next) => {
     const storageDir = getStorageDir();
     const filePath = path.join(storageDir, filename);
 
-    // If local file exists, serve it
-    if (fs.existsSync(filePath)) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-      return res.sendFile(filePath);
-    }
-
-    // Ephemeral disk fallback: if local file is missing, dynamically build on-the-fly and stream it
+    // Always generate dynamically to prevent stale data when event details are updated.
     const eventDate = new Date(cert.eventId.startDate).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -428,6 +421,15 @@ export const downloadPDF = async (req, res, next) => {
       type: cert.type,
       position: cert.position
     });
+
+    // Quietly update local storage cache if directory is available
+    try {
+      if (fs.existsSync(storageDir)) {
+        fs.writeFileSync(filePath, pdfBuffer);
+      }
+    } catch (writeErr) {
+      console.error('Failed to update static certificate PDF file on disk:', writeErr);
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, ShieldAlert, Award, Calendar, User, Sparkles, Building, Bookmark } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Award, Calendar, User, Sparkles, Building, Bookmark, MapPin } from 'lucide-react';
 import { Skeleton } from '../components/Skeleton.jsx';
 import API from '../api/api.js';
 
@@ -103,8 +103,17 @@ export const Verify = () => {
               <div className="flex items-start gap-3 border-t border-white/5 pt-3">
                 <Calendar className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Issued Date</span>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Event Date</span>
                   <span className="text-sm font-semibold text-slate-200">{verifiedData.eventDate}</span>
+                </div>
+              </div>
+
+              {/* Venue */}
+              <div className="flex items-start gap-3 border-t border-white/5 pt-3">
+                <MapPin className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Event Venue</span>
+                  <span className="text-sm font-semibold text-slate-200">{verifiedData.eventVenue}</span>
                 </div>
               </div>
 
