@@ -161,7 +161,7 @@ export const OrganizerDashboard = () => {
     fetchData();
   }, []);
 
-  // Compute dashboard-wide stats based on organizer's events
+  // Compute dashboard-wide stats based on organizer's events (Optimized via Promise.all parallelization)
   const calculateStats = async (eventList) => {
     let totalRegs = 0;
     let totalVols = 0;
@@ -169,23 +169,28 @@ export const OrganizerDashboard = () => {
     let checkInSum = 0;
     let eventsAttendedDataCount = 0;
 
-    for (const evt of eventList) {
-      totalVols += evt.volunteers?.length || 0;
-      totalSponsors += evt.sponsors?.length || 0;
-      
-      try {
-        const analRes = await API.get(`/analytics/${evt._id}`);
-        if (analRes.data.success) {
-          const stats = analRes.data.data;
-          totalRegs += stats.totalRegistrations;
-          if (stats.totalRegistrations > 0) {
-            checkInSum += stats.attendanceRate;
-            eventsAttendedDataCount++;
+    try {
+      // Execute all event analytics requests concurrently in parallel
+      await Promise.all(eventList.map(async (evt) => {
+        totalVols += evt.volunteers?.length || 0;
+        totalSponsors += evt.sponsors?.length || 0;
+        
+        try {
+          const analRes = await API.get(`/analytics/${evt._id}`);
+          if (analRes.data.success) {
+            const stats = analRes.data.data;
+            totalRegs += stats.totalRegistrations;
+            if (stats.totalRegistrations > 0) {
+              checkInSum += stats.attendanceRate;
+              eventsAttendedDataCount++;
+            }
           }
+        } catch (err) {
+          // Ignore individual analytics fetch failures
         }
-      } catch (err) {
-        // Analytics might fail if no registrations exist
-      }
+      }));
+    } catch (globalErr) {
+      console.error('Failed to aggregate dashboard analytics concurrently:', globalErr);
     }
 
     setDashboardStats({
